@@ -25,7 +25,7 @@ import {
 import { cn } from '../lib/utils';
 
 // Consts
-const API_URL = "https://script.google.com/macros/s/AKfycbwyrBt0HtUUGB1uObAQKvL0bIewDqcAOR_5AFleAT5OFu5zHUXeGXDiQ1J29Xo3_wAcPQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwZeoM0wnOp-IGOysXbPFV5EFUlIaS0tr13OofzBHdifkeYC34ARn9eZB6TD8XpM37X5w/exec";
 const PAGE_SIZE = 15;
 const PALETTE = ['#3b82f6', '#2dd4bf', '#a78bfa', '#fbbf24', '#34d399', '#f43f5e', '#60a5fa', '#f97316'];
 
@@ -86,7 +86,7 @@ export default function Dashboard() {
         };
       });
       setData(processed);
-      setSyncTime(new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }));
+      setSyncTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).replace('AM', 'ص').replace('PM', 'م'));
     } catch (err: any) {
       setError(err.message || 'تعذر الاتصال بالخادم');
     } finally {

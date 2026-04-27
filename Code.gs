@@ -98,7 +98,7 @@ function sendSelectedRowsAndAttachSheet(sheet) {
     "الكمية المطلوبة", "مدة التوريد", "التصنيف", "التوافر", "رصيد السيستم", "حالة الطلب"
   ];
 
-  const htmlBody = \`
+  const htmlBody = `
     <html dir="rtl">
       <head>
         <style>
@@ -110,10 +110,10 @@ function sendSelectedRowsAndAttachSheet(sheet) {
         </style>
       </head>
       <body>
-        <h2>📦 التقرير اليومي לנواقص المخازن — \${sheet.getName()}</h2>
+        <h2>📦 التقرير اليومي لنواقص المخازن — ${sheet.getName()}</h2>
         <table>
-          <tr>\${HEADERS.map(h => \`<th>\${h}</th>\`).join("")}</tr>
-          \${rowsToSend.map(r => {
+          <tr>${HEADERS.map(h => `<th>${h}</th>`).join("")}</tr>
+          ${rowsToSend.map(r => {
              // إحضار أعمدة الشيت بالتحديد
              const code = r.values[0];
              const name = r.values[1];
@@ -125,11 +125,11 @@ function sendSelectedRowsAndAttachSheet(sheet) {
              const avail = r.values[10];
              const bal = r.values[11];
              const stat = r.values[12];
-             return \`<tr><td>\${formatCellValue(code)}</td><td>\${formatCellValue(name)}</td><td>\${formatCellValue(lastQt)}</td><td>\${formatCellValue(lastDt)}</td><td>\${formatCellValue(reqQt)}</td><td>\${formatCellValue(days)}</td><td>\${formatCellValue(cat)}</td><td>\${formatCellValue(avail)}</td><td>\${formatCellValue(bal)}</td><td>\${formatCellValue(stat)}</td></tr>\`;
+             return `<tr><td>${formatCellValue(code)}</td><td>${formatCellValue(name)}</td><td>${formatCellValue(lastQt)}</td><td>${formatCellValue(lastDt)}</td><td>${formatCellValue(reqQt)}</td><td>${formatCellValue(days)}</td><td>${formatCellValue(cat)}</td><td>${formatCellValue(avail)}</td><td>${formatCellValue(bal)}</td><td>${formatCellValue(stat)}</td></tr>`;
           }).join("")}
         </table>
       </body>
-    </html>\`;
+    </html>`;
 
   const excelBlob = exportSheetAsExcel(ss, sheet);
 
@@ -146,14 +146,14 @@ function sendSelectedRowsAndAttachSheet(sheet) {
 }
 
 function exportSheetAsExcel(ss, sheet) {
-  const url   = \`https://docs.google.com/spreadsheets/d/\${ss.getId()}/export?format=xlsx&gid=\${sheet.getSheetId()}\`;
+  const url   = `https://docs.google.com/spreadsheets/d/${ss.getId()}/export?format=xlsx&gid=${sheet.getSheetId()}`;
   const token = ScriptApp.getOAuthToken();
   const res   = UrlFetchApp.fetch(url, { headers: { Authorization: "Bearer " + token } });
   return res.getBlob().setName(sheet.getName() + ".xlsx");
 }
 
 function formatCellValue(v) {
-  if (v instanceof Date) return \`\${v.getFullYear()}/\${v.getMonth() + 1}/\${v.getDate()}\`;
+  if (v instanceof Date) return `${v.getFullYear()}/${v.getMonth() + 1}/${v.getDate()}`;
   return v ?? "";
 }
 
