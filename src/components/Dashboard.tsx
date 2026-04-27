@@ -70,19 +70,27 @@ export default function Dashboard() {
       
       const rows = Array.isArray(json.rows) ? json.rows : [];
       const processed = rows.map((r: any) => {
-        // Try multiple keys for "Supply Duration" to be safe, preferring column H
-        const durationKey = Object.keys(r).find(k => k.includes('مدة التوريد')) || 'مدة التوريد من تاريخ الطلب';
+        const getK = (str: string) => Object.keys(r).find(k => k.includes(str));
+        const durationKey = getK('مدة التوريد') || 'مدة التوريد من تاريخ الطلب';
+        const reqKey = getK('الكمية المطلوبة') || getK('+') || 'الكمية المطلوبة';
+        
         return {
           ...r,
-          _balance: extractNum(r['رصيد السيستم']),
-          _reqNum: Object.keys(r).some(k => k.includes('طلب ك +')) 
-                     ? extractNum(r[Object.keys(r).find(k => k.includes('طلب ك +'))!]) 
-                     : extractNum(r['الكمية المطلوبة']),
+          'اسم الصنف': r['اسم الصنف'] || r[getK('اسم الصنف') || ''],
+          'التصنيف': r['التصنيف'] || r[getK('التصنيف') || ''],
+          'توفر المنتج في المعصرة': r['توفر المنتج في المعصرة'] || r[getK('توفر') || ''],
+          'حالة الطلب': r['حالة الطلب'] || r[getK('حالة الطلب') || ''],
+          'تاريخ الطلب': r['تاريخ الطلب'] || r[getK('تاريخ الطلب') || ''],
+          'ملاحظات': r['ملاحظات'] || r[getK('ملاحظات') || ''],
+          'الباركود \\ مرجع داخلي': r['الباركود \\ مرجع داخلي'] || r[getK('باركود') || ''],
+          
+          _balance: extractNum(r['رصيد السيستم'] || r[getK('رصيد السيستم') || '']),
+          _reqNum: extractNum(r[reqKey]),
           _days: (() => { 
             const d = extractNum(r[durationKey]); 
             return isNaN(d) ? null : d; 
           })(),
-          _lastSup: extractNum(r['اخر كمية تم توريدها']),
+          _lastSup: extractNum(r['اخر كمية تم توريدها'] || r[getK('اخر كمية') || '']),
         };
       });
       setData(processed);
@@ -491,7 +499,7 @@ function DonutChart({ data, dataKey }: { data: any[], dataKey: string }) {
           {plot.map((e, idx) => <Cell key={idx} fill={PALETTE[idx % PALETTE.length]} />)}
         </Pie>
         <RechartsTooltip 
-          contentStyle={{ backgroundColor: '#0d1d35', borderColor: 'rgba(59,130,246,0.2)', borderRadius: 8, color: '#e4eeff', textAlign: 'right' }} 
+          contentStyle={{ backgroundColor: '#0d1d35', borderColor: 'rgba(59,130,246,0.2)', borderRadius: 8, color: '#e4eeff', textAlign: 'right', direction: 'rtl' }} 
           itemStyle={{ color: '#e4eeff' }}
           formatter={(value: any, name: any) => [`${value} صنف`, name]} 
         />
@@ -542,25 +550,27 @@ function SupplyDurationChart({ data }: any) {
   validDays.forEach((v: any) => { buckets[Math.min(bCnt-1, Math.floor(v/W))].count++; });
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={buckets} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-        <defs>
-          <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.8}/>
-            <stop offset="95%" stopColor="#a78bfa" stopOpacity={0}/>
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-        <XAxis dataKey="name" stroke="#6b8ab5" fontSize={11} tickLine={false} axisLine={false} />
-        <YAxis stroke="#6b8ab5" fontSize={11} tickLine={false} axisLine={false} />
-        <RechartsTooltip 
-          contentStyle={{ backgroundColor: '#0d1d35', borderColor: 'rgba(59,130,246,0.2)', borderRadius: 8, textAlign: 'right' }}
-          formatter={(val: any) => [`${val} صنف`, 'العدد']}
-          labelStyle={{ color: '#e4eeff', marginBottom: 4 }}
-        />
-        <Area type="monotone" dataKey="count" stroke="#a78bfa" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
-      </AreaChart>
-    </ResponsiveContainer>
+    <div dir="ltr" className="w-full h-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={buckets} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <defs>
+            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.8}/>
+              <stop offset="95%" stopColor="#a78bfa" stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+          <XAxis dataKey="name" stroke="#6b8ab5" fontSize={11} tickLine={false} axisLine={false} />
+          <YAxis stroke="#6b8ab5" fontSize={11} tickLine={false} axisLine={false} />
+          <RechartsTooltip 
+            contentStyle={{ backgroundColor: '#0d1d35', borderColor: 'rgba(59,130,246,0.2)', borderRadius: 8, textAlign: 'right', direction: 'rtl' }}
+            formatter={(val: any) => [`${val} صنف`, 'العدد']}
+            labelStyle={{ color: '#e4eeff', marginBottom: 4 }}
+          />
+          <Area type="monotone" dataKey="count" stroke="#a78bfa" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
@@ -568,20 +578,22 @@ function TopQuantitiesChart({ data }: any) {
   const top = [...data].filter(r => r._reqNum > 0).sort((a, b) => b._reqNum - a._reqNum).slice(0, 5);
   
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={top} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-        <XAxis type="number" stroke="#6b8ab5" fontSize={11} tickLine={false} axisLine={false} />
-        <YAxis type="category" dataKey="اسم الصنف" width={100} stroke="#6b8ab5" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => v.slice(0, 15) + (v.length > 15 ? '...' : '')} />
-        <RechartsTooltip 
-          contentStyle={{ backgroundColor: '#0d1d35', borderColor: 'rgba(59,130,246,0.2)', borderRadius: 8, textAlign: 'right' }}
-          formatter={(val: any) => [fmtFull(val), 'الكمية']}
-          labelStyle={{ color: '#e4eeff', marginBottom: 4 }}
-        />
-        <Bar dataKey="_reqNum" radius={[0, 4, 4, 0]}>
-          {top.map((entry, index) => <Cell key={`cell-${index}`} fill={PALETTE[index % PALETTE.length]} />)}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div dir="ltr" className="w-full h-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={top} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+          <XAxis type="number" stroke="#6b8ab5" fontSize={11} tickLine={false} axisLine={false} />
+          <YAxis type="category" dataKey="اسم الصنف" width={140} stroke="#6b8ab5" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => v.length > 25 ? v.substring(0, 25) + '...' : v} />
+          <RechartsTooltip 
+            contentStyle={{ backgroundColor: '#0d1d35', borderColor: 'rgba(59,130,246,0.2)', borderRadius: 8, textAlign: 'right', direction: 'rtl' }}
+            formatter={(val: any) => [fmtFull(val), 'الكمية']}
+            labelStyle={{ color: '#e4eeff', marginBottom: 4 }}
+          />
+          <Bar dataKey="_reqNum" radius={[0, 4, 4, 0]}>
+            {top.map((entry, index) => <Cell key={`cell-${index}`} fill={PALETTE[index % PALETTE.length]} />)}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

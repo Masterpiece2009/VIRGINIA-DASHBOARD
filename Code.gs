@@ -82,20 +82,20 @@ function sendSelectedRowsAndAttachSheet(sheet) {
 
   const data = sheet.getRange(3, 1, lastRow - 2, lastCol).getValues();
 
-  // فلترة الصفوف اللي عندها قيمة في العمود رقم 13 (حالة الطلب)
+  // فلترة الصفوف اللي عندها حالة الطلب (العمود P - اندكس 15)
   const rowsToSend = data
     .map((row, idx) => ({ row: idx + 3, values: row }))
-    .filter(({ values }) => values[12] !== "" && values[12] != null);
+    .filter(({ values }) => values[15] !== "" && values[15] != null);
 
   if (rowsToSend.length === 0) {
     clearTriggerCellAndNotify(sheet, "⚠️ لا يوجد صفوف لإرسالها بناءً على حالة الطلب.");
     return;
   }
 
-  // عناوين الأعمدة للإيميل (مرتبة حسب الشيت الجديد)
+  // عناوين الأعمدة للإيميل
   const HEADERS = [
-    "الباركود", "اسم الصنف", "اخر كمية تم توريدها", "تاريخ اخر توريد",
-    "الكمية المطلوبة", "مدة التوريد", "التصنيف", "التوافر", "رصيد السيستم", "حالة الطلب"
+    "الباركود", "اسم الصنف", "آخر كمية تم توريدها", "تاريخ آخر توريد",
+    "الكمية المطلوبة / طلب", "مدة التوريد", "التصنيف", "التوافر", "رصيد السيستم", "حالة الطلب", "ملاحظات"
   ];
 
   const htmlBody = `
@@ -114,18 +114,19 @@ function sendSelectedRowsAndAttachSheet(sheet) {
         <table>
           <tr>${HEADERS.map(h => `<th>${h}</th>`).join("")}</tr>
           ${rowsToSend.map(r => {
-             // إحضار أعمدة الشيت بالتحديد
-             const code = r.values[0];
-             const name = r.values[1];
-             const lastQt = r.values[2];
-             const lastDt = r.values[3];
-             const reqQt = r.values[4]; // الطلب
-             const days = r.values[7]; // مدة التوريد من تاريخ الطلب (العمود H)
-             const cat = r.values[9];
-             const avail = r.values[10];
-             const bal = r.values[11];
-             const stat = r.values[12];
-             return `<tr><td>${formatCellValue(code)}</td><td>${formatCellValue(name)}</td><td>${formatCellValue(lastQt)}</td><td>${formatCellValue(lastDt)}</td><td>${formatCellValue(reqQt)}</td><td>${formatCellValue(days)}</td><td>${formatCellValue(cat)}</td><td>${formatCellValue(avail)}</td><td>${formatCellValue(bal)}</td><td>${formatCellValue(stat)}</td></tr>`;
+             const code = r.values[0];   // A
+             const name = r.values[1];   // B
+             const lastQt = r.values[2]; // C
+             const lastDt = r.values[3]; // D
+             const reqQt = r.values[4];  // E
+             const days = r.values[7];   // H
+             const cat = r.values[12];   // M (12 index)
+             const avail = r.values[13]; // N (13 index)
+             const bal = r.values[14];   // O (14 index)
+             const stat = r.values[15];  // P (15 index)
+             const notes = r.values[16]; // Q (16 index)
+             
+             return `<tr><td>${formatCellValue(code)}</td><td>${formatCellValue(name)}</td><td>${formatCellValue(lastQt)}</td><td>${formatCellValue(lastDt)}</td><td>${formatCellValue(reqQt)}</td><td>${formatCellValue(days)}</td><td>${formatCellValue(cat)}</td><td>${formatCellValue(avail)}</td><td>${formatCellValue(bal)}</td><td>${formatCellValue(stat)}</td><td>${formatCellValue(notes)}</td></tr>`;
           }).join("")}
         </table>
       </body>
@@ -140,8 +141,8 @@ function sendSelectedRowsAndAttachSheet(sheet) {
     attachments: [excelBlob]
   });
 
-  // مسح الملاحظات/الحالة بعد الإرسال إن لزم (هنا يمسح عمود 13)
-  rowsToSend.forEach(r => sheet.getRange(r.row, 13).clearContent());
+  // مسح حالة الطلب بعد الإرسال إن لزم (هنا يمسح عمود 16 / P)
+  rowsToSend.forEach(r => sheet.getRange(r.row, 16).clearContent());
   clearTriggerCellAndNotify(sheet, "✅ تم إرسال الإيميل بنجاح.");
 }
 
